@@ -1,0 +1,196 @@
+version: '2'
+
+# Last updated
+# 10/08/21
+
+services:
+  # VPN container
+  # All containers force their network traffic through this container
+  pia:
+    container_name: pia
+    image: qmcgaw/gluetun
+    restart: always
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    network_mode: bridge
+    volumes:
+      - /path/to/pia/docker/forwardedport:/gluetun
+    ports:
+     # Host:Container/tcp|udp
+     # If not specified it will be TCP
+     # PIA
+     - 6881:6881
+     # PIA
+     - 6881:6881/udp
+     # Radarr
+     - 7878:7878
+     # qBittorrent
+     - 8080:8080
+     # Sonarr
+     - 8989:8989
+     # Lidarr
+     - 8686:8686
+     # Beets
+     - 8337:8337
+     # Firefox
+     - 5800:5800
+     # Prowlarr
+     - 9696:9696
+     # Bazarr
+     - 6767:6767
+     # Slskd
+     - 5000:5000
+     - 5001:5001
+     # Add more ports here as needed
+    environment:
+      # Change these variables to your own
+      # PIA username and password
+      - USER=user
+      - PASSWORD=pass
+      # Your PIA region
+      - REGION=AU Sydney
+      # Your subnet (type ipconfig to find yours)
+      - EXTRA_SUBNETS=192.168.232.1/24
+      # Port Forwarding
+      - PORT_FORWARDING=on
+      - PORT_FORWARDING_STATUS_FILE=/gluetun/forwarded_port
+      # Don't change anything below here
+      - ENCRYPTION=strong
+      - PROTOCOL=udp
+      - NONROOT=no
+      - DOT=on
+      - BLOCK_MALICIOUS=on
+      - BLOCK_NSA=off
+      - UNBLOCK=
+      - FIREWALL=on
+      - PROXY=on
+      - PROXY_LOG_LEVEL=Critical
+      - PROXY_USER=
+      - PROXY_PASSWORD=
+
+  # JDownloader
+  # For downloading anything
+  # Make sure to enter the container and run the below command
+  # configure EMAIL PASSWORD
+  jdownloader:
+    container_name: jdownloader
+    image: jaymoulin/jdownloader
+    restart: always
+    network_mode: service:pia
+    volumes:
+     - /path/to/downloads:/downloads
+     - /path/to/config:/opt/JDownloader/cfg
+  # Sonarr
+  # For downloading TV shows
+  # Runs on port 8989
+  sonarr:
+    container_name: sonarr
+    image: linuxserver/sonarr 
+    restart: always
+    network_mode: service:pia
+    environment:
+     - PUID=1000
+     - PGID=1000
+     - TZ=Australia/Sydney
+     - UMASK_SET=022
+    volumes:
+     - /path/to/config:/config
+     - /path/to/data:/data
+  # Radarr
+  # For downloading movies
+  # Runs on port 7878
+  radarr:
+    container_name: radarr
+    image: linuxserver/radarr
+    restart: always
+    network_mode: service:pia
+    environment:
+     - PUID=1000
+     - PGID=1000
+     - TZ=Australia/Sydney
+     - UMASK_SET=022
+    volumes:
+     - /path/to/config:/config
+     - /path/to/data:/data
+  qbittorrent:
+    container_name: qbittorrent
+    image: linuxserver/qbittorrent
+    restart: always
+    network_mode: service:pia
+    environment:
+     - PUID=1000
+     - PGID=1000
+     - TZ=Australia/Sydney
+     - UMASK_SET=022
+     - WEBUI_PORT=8080
+    volumes:
+     - /path/to/config:/config
+     - /path/to/data:/data
+  prowlarr:
+    image: linuxserver/prowlarr:develop
+    container_name: prowlarr
+    network_mode: service:pia
+    environment:
+     - PUID=1000
+     - PGID=1000
+     - TZ=Australia/Sydney
+    volumes:
+     - /path/to/config:/config
+    restart: always
+  bazarr:
+    image: linuxserver/bazarr
+    container_name: bazarr
+    network_mode: service:pia
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+    volumes:
+      - /path/to/config:/config
+      - /path/to/data:/data
+    restart: always
+  lidarr:
+    image: ghcr.io/linuxserver/lidarr
+    container_name: lidarr
+    network_mode: service:pia
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+    volumes:
+      - /path/to/config:/config
+      - /path/to/data:/data
+      - /docker/containers/configs/lidarr/90-config:/etc/cont-init.d/90-config
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+  beets:
+    image: ghcr.io/linuxserver/beets
+    container_name: beets
+    network_mode: service:pia
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+    volumes:
+      - /path/to/config:/config
+      - /path/to/data:/data
+    restart: always
+  slskd:
+    image: slskd/slskd
+    container_name: slskd
+    network_mode: service:pia
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+      - SLSKD_USERNAME=<slskd username>
+      - SLSKD_PASSWORD=<slskd password>
+      - SLSKD_SLSK_USERNAME=<Soulseek username>
+      - SLSKD_SLSK_PASSWORD=<Soulseek password>
+    volumes:
+      - /path/to/downloaded:/var/slskd/downloads
+      - /path/to/incoming:/var/slskd/incoming
+      - /path/to/shared:/var/slskd/shared
+    restart: always
