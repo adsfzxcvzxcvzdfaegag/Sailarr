@@ -34,8 +34,6 @@ services:
      - 8686:8686
      # Beets
      - 8337:8337
-     # Firefox
-     - 5800:5800
      # Prowlarr
      - 9696:9696
      # Bazarr
