@@ -229,6 +229,7 @@ PORT_FORWARDING_STATUS_FILE should stay static unless you feel like changing the
     I would recommend having your /config's an a centralised area such as /docker/(SERVICE_NAME)/Config and the /data folder in an area with a tonne of space as that is where everything is going, in instances such as slskd the downloads directory should always be within the Data folder with the data folder's directory tree looking something like this to make hard links, organization and other such things far easier:
 
 ```
+```
 - Data
   - Downloads
     - Soulseek
